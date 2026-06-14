@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>خوارنگەها بابێ هەڤالی - V19 چاککری</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; margin: 0; padding: 5px; direction: rtl; overflow-x: hidden; }
+        h1 { text-align: center; color: #d35400; font-size: 20px; margin: 10px 0; }
+
+        .header-container { max-width: 500px; margin: 0 auto; }
+
+        .secret-cash-box {
+            background: #2c3e50; color: white; padding: 10px; border-radius: 12px;
+            text-align: center; margin-bottom: 8px; cursor: pointer; border: 2px solid #f39c12;
+        }
+        .secret-cash-box .amount { font-size: 18px; font-weight: bold; color: #f1c40f; }
+
+        .takeaway-box {
+            background: #27ae60; color: white; padding: 12px; border-radius: 12px;
+            text-align: center; margin-bottom: 8px; cursor: pointer; font-weight: bold;
+        }
+
+        .debtors-box {
+            background: #8e44ad; color: white; padding: 12px; border-radius: 12px;
+            text-align: center; margin-bottom: 15px; cursor: pointer; font-weight: bold;
+        }
+
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 500px; margin: 0 auto; }
+        .table-box {
+            background: white; border-radius: 10px; padding: 15px 2px;
+            text-align: center; cursor: pointer; border: 1px solid #ddd; font-size: 13px;
+        }
+        .table-box.occupied { background-color: #e74c3c; color: white; border-color: #c0392b; }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; width: 98%; max-width: 450px; border-radius: 15px;
+            padding: 10px; max-height: 95vh; overflow-y: auto;
+        }
+        
+        .menu-section { margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+        .section-title { font-size: 13px; font-weight: bold; color: #d35400; margin-bottom: 5px; display: block; background: #fff5eb; padding: 3px 8px; border-right: 3px solid #d35400; }
+        
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .menu-item {
+            background: #fff; border: 1px solid #e67e22; padding: 8px 2px;
+            border-radius: 6px; text-align: center; font-size: 11px; font-weight: bold; cursor: pointer; position: relative;
+        }
+
+        .menu-item.sold-out { opacity: 0.25; background: #ddd; border-color: #999; color: #777; }
+        .menu-item.sold-out::after { content: "نەماوە"; color: red; font-size: 10px; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-weight: bold; }
+        
+        .manage-mode-active .menu-item { border: 2px dashed #3498db; opacity: 1; }
+        .manage-mode-active .menu-item.sold-out { border: 2px solid red; opacity: 0.5; }
+
+        .bill-area { border-top: 1px solid #ddd; margin-top: 10px; max-height: 150px; overflow-y: auto; }
+        .bill-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; margin-bottom: 4px; padding: 5px;
+            background: #f9f9f9; border-radius: 5px;
+        }
+        .remove-btn { background: #ff4d4d; color: white; border: none; border-radius: 4px; padding: 1px 6px; cursor: pointer; margin-left: 5px; }
+
+        .total-box {
+            background: #27ae60; color: white; text-align: center;
+            padding: 10px; border-radius: 8px; font-size: 18px; font-weight: bold; margin-bottom: 10px;
+        }
+
+        .summary-box {
+            display: none;
+            background: #fff3cd; border: 2px solid #ffc107; color: #856404;
+            padding: 12px; border-radius: 10px; font-size: 16px; font-weight: bold;
+            text-align: center; margin-bottom: 12px; line-height: 1.6;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .adjustment-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 10px 0; }
+        .adj-btn { padding: 8px 0; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 11px; }
+        .btn-plus { background: #2980b9; }
+        .btn-minus { background: #c0392b; }
+
+        .footer-btns { display: flex; flex-direction: column; gap: 8px; }
+        .row-btns { display: flex; gap: 8px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-close { background: #95a5a6; color: white; }
+        .btn-pay { background: #27ae60; color: white; }
+        .btn-debt { background: #e67e22; color: white; }
+        .btn-manage { background: #3498db; color: white; margin-bottom: 8px; font-size: 12px; padding: 8px; width: 100%; }
+
+        .footer-credit { margin-top: 20px; text-align: center; padding-bottom: 20px; }
+        .footer-credit p { font-size: 10px; color: #888; margin: 2px 0; }
+        .reset-btn { background: none; border: 1px solid #ddd; color: #ccc; padding: 4px 8px; border-radius: 4px; font-size: 9px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>🍔 خوارنگەها بابێ هەڤالی</h1>
+
+        <div class="secret-cash-box" onclick="checkPin()">
+            <div style="font-size: 12px;">💰 سندوقا پارەی (کلیک بکە)</div>
+            <div class="amount" id="cashDisplay">**** دینار</div>
+        </div>
+
+        <div class="takeaway-box" onclick="openModal('سەفەری')">🥡 پشکا سەفەری (Takeaway)</div>
+
+        <div class="debtors-box" onclick="openDebtorsModal()">
+            📝 لیستا دەینداران <span id="debtBadge" style="background:white; color:#8e44ad; padding:1px 6px; border-radius:8px; font-size:11px; display:none;">0</span>
+        </div>
+    </div>
+
+    <div class="grid-container" id="tablesGrid"></div>
+
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="text-align:center; margin: 0 0 5px 0; color:#d35400;"></h3>
+            
+            <div id="tableSummary" class="summary-box"></div>
+
+            <button id="manageBtn" class="btn btn-manage" onclick="toggleManageMode()">🔧 ڕێکخستنا خوارنێ (نەمان)</button>
+
+            <div id="menuContent"></div>
+            
+            <div class="bill-area" id="billItems"></div>
+
+            <div class="adjustment-container">
+                <button class="adj-btn btn-plus" onclick="addAdjustment('زێدەکرن', 5000)">+5,000</button>
+                <button class="adj-btn btn-plus" onclick="addAdjustment('زێدەکرن', 1000)">+1,000</button>
+                <button class="adj-btn btn-minus" onclick="addAdjustment('کێمکرن', -1000)">-1,000</button>
+                <button class="adj-btn btn-minus" onclick="addAdjustment('کێمکرن', -5000)">-5,000</button>
+            </div>
+
+            <div class="total-box" id="tableTotal">0 دینار</div>
+            
+            <div class="footer-btns">
+                <div class="row-btns">
+                    <button class="btn btn-pay" onclick="payTable()">وەرگرتن</button>
+                    <button class="btn btn-debt" onclick="saveAsDebt()">دەین</button>
+                </div>
+                <button class="btn btn-close" onclick="closeModal()">پاشکەفتن</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="debtorsModal">
+        <div class="modal-content">
+            <h3 style="text-align:center; color:#8e44ad; margin-top:0;">📝 لیستا دەینداران</h3>
+            <div id="debtorsList"></div>
+            <button class="btn btn-close" style="width:100%; margin-top:10px;" onclick="closeDebtorsModal()">داخستن</button>
+        </div>
+    </div>
+
+    <div class="footer-credit">
+        <p>ئامادەکرن: ریان هفال احمد عبد</p>
+        <p>مۆبایل: 07507202909</p> <button class="reset-btn" onclick="resetSafe()">Reset Box</button>
+    </div>
+
+    <script>
+        const tableCount = 11;
+        const correctPin = "1974";
+        let activeTable = null;
+        let isCashVisible = false;
+        let isManageMode = false;
+
+        const menuData = [
+            { cat: '١ نەفەر', items: [
+                {n: 'کەباب', p: 8000, id: 'kabab_1'}, {n: 'مریشک', p: 7000, id: 'mrishk_1'}, {n: 'مێلاک', p: 8000, id: 'melak_1'}, 
+                {n: 'گۆشتی', p: 8000, id: 'gosht_1'}, {n: 'گولچیسک', p: 8000, id: 'gulch_1'}, {n: 'مێز غنم', p: 8000, id: 'mez_1'}, {n: 'دینگ', p: 8000, id: 'ding_1'}
+            ]},
+            { cat: 'نیڤ نەفەر', items: [
+                {n: 'نیڤ کەباب', p: 4000, id: 'kabab_05'}, {n: 'نیڤ مریشک', p: 3500, id: 'mrishk_05'}, {n: 'نیڤ مێلاک', p: 4000, id: 'melak_05'}, 
+                {n: 'نیڤ گۆشتی', p: 4000, id: 'gosht_05'}, {n: 'نیڤ گولچیسک', p: 4000, id: 'gulch_05'}, {n: 'نیڤ مێزغنم', p: 4000, id: 'mez_05'}, {n: 'نیڤ دینگ', p: 4000, id: 'ding_05'}
+            ]},
+            { cat: '١ شیشک', items: [
+                {n: 'شیش کەباب', p: 2000, id: 'kabab_shish'}, {n: 'شیش مریشک', p: 1750, id: 'mrishk_shish'}, {n: 'شیش مێلاک', p: 2000, id: 'melak_shish'}, 
+                {n: 'شیش گۆشتی', p: 2000, id: 'gosht_shish'}, {n: 'شیش گولچیسک', p: 2000, id: 'gulch_shish'}, {n: 'شیش مێزغنم', p: 2000, id: 'mez_shish'}, {n: 'شیش دینگ', p: 2000, id: 'ding_shish'}
+            ]}
+        ];
+
+        let restaurantData = JSON.parse(localStorage.getItem('ryan_v19_data')) || {};
+        let totalSafe = parseInt(localStorage.getItem('ryan_v19_safe')) || 0;
+        let debts = JSON.parse(localStorage.getItem('ryan_v19_debts')) || [];
+        let soldOutIds = JSON.parse(localStorage.getItem('ryan_v19_soldout')) || {};
+
+        function init() {
+            const grid = document.getElementById('tablesGrid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= tableCount; i++) {
+                const isBusy = restaurantData[i] && restaurantData[i].length > 0;
+                const div = document.createElement('div');
+                div.className = `table-box ${isBusy ? 'occupied' : ''}`;
+                div.innerHTML = `<b>مێزا ${i}</b><br><small>${isBusy ? restaurantData[i].length + ' جۆر' : 'ڤالا'}</small>`;
+                div.onclick = () => openModal(i);
+                grid.appendChild(div);
+            }
+            const badge = document.getElementById('debtBadge');
+            if(debts.length > 0) { badge.innerText = debts.length; badge.style.display = 'inline-block'; }
+            else { badge.style.display = 'none'; }
+            updateCashDisplay();
+        }
+
+        function toggleManageMode() {
+            isManageMode = !isManageMode;
+            const btn = document.getElementById('manageBtn');
+            const menu = document.getElementById('menuContent');
+            if(isManageMode) {
+                btn.innerText = "✅ خلاس (پاشکەفتن)";
+                btn.style.background = "#e74c3c";
+                menu.classList.add('manage-mode-active');
+            } else {
+                btn.innerText = "🔧 ڕێکخستنا خوارنێ (نەمان)";
+                btn.style.background = "#3498db";
+                menu.classList.remove('manage-mode-active');
+                save();
+            }
+        }
+
+        function handleItemClick(name, price, id) {
+            if(isManageMode) {
+                soldOutIds[id] = !soldOutIds[id];
+                openModal(activeTable); 
+            } else {
+                if(soldOutIds[id]) {
+                    alert(`ببۆرا خوارنا (${name}) نەماوە!`);
+                } else {
+                    addItem(name, price);
+                }
+            }
+        }
+
+        function openModal(id) {
+            activeTable = id;
+            document.getElementById('modalTitle').innerText = (id === 'سەفەری') ? '🥡 پشکا سەفەری' : '🍽️ مێزا ' + id;
+            const menuContent = document.getElementById('menuContent');
+            
+            let menuHTML = '';
+            menuData.forEach(section => {
+                menuHTML += `<div class="menu-section"><span class="section-title">${section.cat}</span><div class="menu-grid">`;
+                section.items.forEach(item => {
+                    const isSoldOut = soldOutIds[item.id] ? 'sold-out' : '';
+                    menuHTML += `<div class="menu-item ${isSoldOut}" onclick="handleItemClick('${item.n}', ${item.p}, '${item.id}')">${item.n}<br>${item.p.toLocaleString()}</div>`;
+                });
+                menuHTML += `</div></div>`;
+            });
+            
+            menuContent.innerHTML = menuHTML;
+            if(isManageMode) menuContent.classList.add('manage-mode-active');
+            refreshModalList();
+            document.getElementById('orderModal').style.display = 'flex';
+        }
+
+        function closeModal() { 
+            document.getElementById('orderModal').style.display = 'none'; 
+            isManageMode = false;
+            init(); 
+        }
+
+        function addItem(name, price) {
+            if (!restaurantData[activeTable]) restaurantData[activeTable] = [];
+            restaurantData[activeTable].push({ name, price });
+            save(); refreshModalList();
+        }
+
+        function addAdjustment(name, price) {
+            if (!restaurantData[activeTable]) restaurantData[activeTable] = [];
+            restaurantData[activeTable].push({ name: name, price: price });
+            save(); refreshModalList();
+        }
+
+        function removeItem(index) {
+            restaurantData[activeTable].splice(index, 1);
+            save(); refreshModalList();
+        }
+
+        function calculateSummary(items) {
+            if (!items || items.length === 0) return "";
+
+            let summary = {};
+            let hasValidFood = false;
+
+            items.forEach(it => {
+                if (it.name === "زێدەکرن" || it.name === "کێمکرن") return;
+                hasValidFood = true;
+
+                let baseName = it.name.replace("نیڤ ", "").replace("شیش ", "").trim();
+                if (!summary[baseName]) {
+                    summary[baseName] = { totalNafar: 0, totalShish: 0 };
+                }
+
+                if (it.name.startsWith("نیڤ")) {
+                    summary[baseName].totalNafar += 0.5;
+                } else if (it.name.startsWith("شیش")) {
+                    summary[baseName].totalShish += 1;
+                } else {
+                    summary[baseName].totalNafar += 1;
+                }
+            });
+
+            if (!hasValidFood) return "";
+
+            let resultTexts = [];
+            for (let food in summary) {
+                let nafar = summary[food].totalNafar;
+                let shish = summary[food].totalShish;
+
+                if (shish >= 4) {
+                    let convertedNafar = Math.floor(shish / 4);
+                    nafar += convertedNafar;
+                    shish = shish % 4; 
+                }
+
+                let textParts = [];
+                if (nafar > 0) textParts.push(`${nafar} نەفەر`);
+                if (shish > 0) textParts.push(`${shish} شیش`);
+
+                if (textParts.length > 0) {
+                    resultTexts.push(`👤 ${textParts.join(" و ")} ${food}`);
+                }
+            }
+
+            return resultTexts.join("<br>");
+        }
+
+        function refreshModalList() {
+            const list = document.getElementById('billItems');
+            const totalDiv = document.getElementById('tableTotal');
+            const summaryDiv = document.getElementById('tableSummary');
+            
+            list.innerHTML = '';
+            let total = 0;
+            const items = restaurantData[activeTable] || [];
+            
+            items.forEach((it, idx) => {
+                total += it.price;
+                list.innerHTML += `<div class="bill-row"><span>${it.name}</span><span>${it.price.toLocaleString()} <button class="remove-btn" onclick="removeItem(${idx})">×</button></span></div>`;
+            });
+            
+            totalDiv.innerText = `کۆمبۆن: ${total.toLocaleString()} دینار`;
+            
+            let summaryContent = calculateSummary(items);
+            if (summaryContent === "") {
+                summaryDiv.style.display = "none";
+            } else {
+                summaryDiv.style.display = "block";
+                summaryDiv.innerHTML = summaryContent;
+            }
+        }
+
+        function payTable() {
+            const items = restaurantData[activeTable] || [];
+            if (items.length === 0) return;
+            let total = items.reduce((sum, it) => sum + it.price, 0);
+            if (confirm(`وەرگرتنا ${total.toLocaleString()} دیناران؟`)) {
+                totalSafe += total;
+                delete restaurantData[activeTable];
+                save(); closeModal();
+            }
+        }
+
+        function saveAsDebt() {
+            const items = restaurantData[activeTable] || [];
+            if (items.length === 0) return;
+            let total = items.reduce((sum, it) => sum + it.price, 0);
+            let name = prompt("ناڤێ دەیندارێ بنووسە:");
+            if (name) {
+                let date = new Date().toLocaleDateString('ku-IQ');
+                debts.push({ name, amount: total, date });
+                delete restaurantData[activeTable];
+                save(); closeModal();
+            }
+        }
+
+        function openDebtorsModal() {
+            const listDiv = document.getElementById('debtorsList');
+            listDiv.innerHTML = '';
+            if (debts.length === 0) listDiv.innerHTML = '<p style="text-align:center; font-size:12px;">چ دەین نینن.</p>';
+            debts.forEach((d, idx) => {
+                listDiv.innerHTML += `
+                    <div class="debt-item" style="display:flex; justify-content:space-between; background:#fdf2ff; padding:8px; border-radius:8px; margin-bottom:8px;">
+                        <div><b>${d.name}</b><br><small>${d.amount.toLocaleString()} د.ع - ${d.date}</small></div>
+                        <button class="btn btn-pay" style="padding: 5px 10px; flex:none; font-size:11px;" onclick="collectDebt(${idx})">وەرگرتن</button>
+                    </div>`;
+            });
+            document.getElementById('debtorsModal').style.display = 'flex';
+        }
+
+        function closeDebtorsModal() { document.getElementById('debtorsModal').style.display = 'none'; init(); }
+
+        function collectDebt(idx) {
+            if (confirm(`تە پارە ژ ${debts[idx].name} وەرگرت؟`)) {
+                totalSafe += debts[idx].amount;
+                debts.splice(idx, 1);
+                save(); openDebtorsModal();
+            }
+        }
+
+        function checkPin() {
+            if (!isCashVisible) {
+                let userInput = prompt("پاسوۆردێ سندوقێ بنووسە:");
+                if (userInput === correctPin) { isCashVisible = true; updateCashDisplay(); }
+                else if (userInput !== null) alert("پاسوۆرد خەلەتە!");
+            } else { isCashVisible = false; updateCashDisplay(); }
+        }
+
+        function updateCashDisplay() {
+            const display = document.getElementById('cashDisplay');
+            display.innerText = isCashVisible ? totalSafe.toLocaleString() + " دینار" : "**** دینار";
+        }
+
+        function resetSafe() {
+            let userInput = prompt("پاسوۆردێ سفرکرنێ بنووسە:");
+            if (userInput === correctPin) { totalSafe = 0; debts = []; soldOutIds = {}; save(); init(); }
+        }
+
+        function save() {
+            localStorage.setItem('ryan_v19_data', JSON.stringify(restaurantData));
+            localStorage.setItem('ryan_v19_safe', totalSafe);
+            localStorage.setItem('ryan_v19_debts', JSON.stringify(debts));
+            localStorage.setItem('ryan_v19_soldout', JSON.stringify(soldOutIds));
+        }
+
+        init();
+    </script>
+</body>
+</html>
